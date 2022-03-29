@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 
+
 template <typename Type>
 class SingleLinkedList {
     struct Node {
@@ -89,6 +90,7 @@ class SingleLinkedList {
         // Возвращает ссылку на самого себя
         // Инкремент итератора, не указывающего на существующий элемент списка, приводит к неопределённому поведению
         BasicIterator& operator++() noexcept {
+            assert(node_ != nullptr);
             node_ = node_->next_node ;
             return *this;
         }
@@ -107,6 +109,7 @@ class SingleLinkedList {
         // Вызов этого оператора у итератора, не указывающего на существующий элемент списка,
         // приводит к неопределённому поведению
         [[nodiscard]] reference operator*() const noexcept {
+            assert(node_ != nullptr);
             return node_ -> value;
         }
 
@@ -114,6 +117,7 @@ class SingleLinkedList {
         // Вызов этого оператора у итератора, не указывающего на существующий элемент списка,
         // приводит к неопределённому поведению
         [[nodiscard]] pointer operator->() const noexcept {
+            assert(node_ != nullptr);
             return &node_ -> value;
         }
 
@@ -200,7 +204,7 @@ public:
         swap(tmp);
     }
 
-    SingleLinkedList(const SingleLinkedList& other){
+    SingleLinkedList(const SingleLinkedList& other) {
         // Сначала надо удостовериться, что текущий список пуст
         SingleLinkedList tmp = Copy(other);
         swap(tmp);
@@ -223,7 +227,7 @@ public:
         std::swap(size_, other.size_);
     }
 
-    ~SingleLinkedList(){
+    ~SingleLinkedList() {
         Clear();
     }
     // Возвращает количество элементов в списке за время O(1)
@@ -241,17 +245,16 @@ public:
         ++size_;
     }
 
-    void PopFront(){
-        if (!IsEmpty()){
-            auto temp = head_.next_node;
-            head_.next_node = head_.next_node -> next_node;
-            delete temp;
-            --size_;
-        }
+    void PopFront() {
+        assert(!IsEmpty());
+        auto temp = head_.next_node;
+        head_.next_node = head_.next_node -> next_node;
+        delete temp;
+        --size_;
     }
 
-    void Clear(){
-        while(!IsEmpty()){
+    void Clear() {
+        while(!IsEmpty()) {
             PopFront();
         }
     }
@@ -260,9 +263,10 @@ public:
 //     Возвращает итератор на вставленный элемент
 //     Если при создании элемента будет выброшено исключение, список останется в прежнем состоянии
     Iterator InsertAfter(ConstIterator pos, const Type& value) {
-        if(pos == before_begin()){
+        assert(pos.node_ != nullptr);
+        if(pos == before_begin()) {
             PushFront(value);
-        }else{
+        } else {
             pos.node_ -> next_node = new Node(value, pos.node_ -> next_node);
             ++size_;
             return Iterator(pos.node_ -> next_node);
@@ -273,14 +277,13 @@ public:
 //    Удаляет элемент, следующий за pos.
 //    Возвращает итератор на элемент, следующий за удалённым
     Iterator EraseAfter(ConstIterator pos) noexcept {
-        if (!IsEmpty()){
-            auto next_node = pos.node_ -> next_node -> next_node;
-            delete (pos.node_ -> next_node);
-            pos.node_ -> next_node = next_node;
-            --size_;
-            return Iterator (next_node);
-        }
-        return end();
+        assert(pos.node_ -> next_node != nullptr);
+        assert(!IsEmpty());
+        auto next_node = pos.node_ -> next_node -> next_node;
+        delete (pos.node_ -> next_node);
+        pos.node_ -> next_node = next_node;
+        --size_;
+        return Iterator (next_node);
     }
 
 private:
@@ -290,7 +293,7 @@ private:
 
     // Метод, который делает копию из списка
     template <typename Type_list>
-    SingleLinkedList Copy(const Type_list& container){
+    SingleLinkedList Copy(const Type_list& container) {
         SingleLinkedList tmp;
         Node* node(&tmp.head_);
         size_t size = 0;
